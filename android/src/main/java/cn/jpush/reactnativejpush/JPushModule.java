@@ -17,7 +17,9 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import cn.jpush.android.api.BasicPushNotificationBuilder;
@@ -60,11 +62,12 @@ public class JPushModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void initPush() {
+    public void initPush(Callback cb) {
         mContext = getCurrentActivity();
         JPushInterface.init(getReactApplicationContext());
         Logger.toast(mContext, "Init push success");
         Logger.i(TAG, "init Success!");
+        cb.invoke();
     }
 
     @ReactMethod
@@ -253,8 +256,12 @@ public class JPushModule extends ReactContextBaseJavaModule {
             } else if (JPushInterface.ACTION_NOTIFICATION_OPENED.equals(data.getAction())) {
                 Logger.d(TAG, "用户点击打开了通知");
                 WritableMap map = Arguments.fromBundle(bundle);
-                mRAC.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                        .emit("openNotification", map);
+                if (pushState) {
+                    mRAC.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                            .emit("openNotification", map);
+                }else {
+                    list.add(map);
+                }
                 Intent intent = new Intent();
                 if (mModule != null && mModule.mContext != null) {
                     intent.setClass(context, mModule.mContext.getClass());
@@ -272,5 +279,18 @@ public class JPushModule extends ReactContextBaseJavaModule {
             }
         }
 
+    }
+    private static boolean pushState = false;
+    private static List<WritableMap> list = new ArrayList<WritableMap>();
+    @ReactMethod
+    public void setState(boolean state){
+        pushState = state;
+        if (pushState && list.size()>0){
+            for (int i=0;i<list.size();i++) {
+                mRAC.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                        .emit("openNotification", list.get(i));
+            }
+            list.clear();
+        }
     }
 }

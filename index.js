@@ -40,8 +40,8 @@ export default class JPush {
 	 * Android only
 	 * 初始化JPush 必须先初始化才能执行其他操作
 	*/
-	static initPush() {
-		JPushModule.initPush();
+	static initPush(cb) {
+		JPushModule.initPush(cb);
 	}
 
 	/**
@@ -154,6 +154,7 @@ export default class JPush {
      		(message) => {
      			cb(message);
      		});
+		this.setState(true);
     }
 
     /**
@@ -165,7 +166,14 @@ export default class JPush {
      	}
      	listeners[cb].remove();
      	listeners[cb] = null;
+		this.setState(false)
     }
+	/**
+    * Android
+    */
+	static setState(state){
+		JPushModule.setState(state);
+	}
 
  	/**
 	 * iOS
