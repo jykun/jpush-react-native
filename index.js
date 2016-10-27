@@ -40,8 +40,8 @@ export default class JPush {
 	 * Android only
 	 * 初始化JPush 必须先初始化才能执行其他操作
 	*/
-	static initPush(cb) {
-		JPushModule.initPush(cb);
+	static initPush() {
+		JPushModule.initPush();
 	}
 
 	/**
