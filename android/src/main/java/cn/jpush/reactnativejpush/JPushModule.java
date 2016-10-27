@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
@@ -62,12 +63,11 @@ public class JPushModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void initPush(Callback cb) {
+    public void initPush() {
         mContext = getCurrentActivity();
         JPushInterface.init(getReactApplicationContext());
         Logger.toast(mContext, "Init push success");
         Logger.i(TAG, "init Success!");
-        cb.invoke();
     }
 
     @ReactMethod
@@ -215,8 +215,16 @@ public class JPushModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getRegistrationID(Callback callback) {
-        mContext = getCurrentActivity();
-        String id = JPushInterface.getRegistrationID(mContext);
+        int i=0;
+        while (TextUtils.isEmpty(JPushInterface.getRegistrationID(getReactApplicationContext()))&&i<10){
+            try {
+                Thread.sleep(500);
+                i++;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        String id = JPushInterface.getRegistrationID(getReactApplicationContext());
         callback.invoke(id);
     }
 
