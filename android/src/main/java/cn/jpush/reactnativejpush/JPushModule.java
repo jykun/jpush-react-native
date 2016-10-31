@@ -68,6 +68,14 @@ public class JPushModule extends ReactContextBaseJavaModule {
         JPushInterface.init(getReactApplicationContext());
         Logger.toast(mContext, "Init push success");
         Logger.i(TAG, "init Success!");
+
+        int builderId =1;
+        BasicPushNotificationBuilder builder = new BasicPushNotificationBuilder(getReactApplicationContext());
+        builder.statusBarDrawable = R.drawable.ic;
+        builder.notificationFlags = Notification.FLAG_AUTO_CANCEL;  //设置为自动消失
+        builder.notificationDefaults = Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS;  // 设置为铃声与震动都要
+        JPushInterface.setPushNotificationBuilder(builderId , builder);
+
     }
 
     @ReactMethod
