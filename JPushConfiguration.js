@@ -10,6 +10,12 @@ if (appKey == undefined || appKey == null) {
 	return;
 }
 
+var moduleName = process.argv.splice(2)[1];
+if (moduleName == undefined || moduleName == null) {
+	console.log("没有输入 moduleName, 将使用默认模块名： app");
+	moduleName = "app";
+};
+
 function projectConfiguration(path){
 	
 	if (isFile(path) == false) {
@@ -37,6 +43,7 @@ function projectConfiguration(path){
 						CoreFoundation,\n\
 						\"-framework\",\n\
 						CFNetwork,\n\
+                        \"-lresolv\",\n\
 						\"-lz\",");
 	fs.writeFileSync(path, rf, "utf-8");	
 }
@@ -156,12 +163,12 @@ getAllfiles("./ios",function (f, s) {
   }
 });
 
-getGradleFile("./node_modules/jpush-react-native", function (f, s) {
-	var isBuildGradle = f.match(/build\.gradle/);
-	if (isBuildGradle != null) {
-		console.log("find gradle file in jpush plugin " + f);
-		configureAppkey(f);
-	} 
+getAndroidManifest("./android/" + moduleName, function(f, s) {
+	var isAndroidManifest = f.match(/AndroidManifest\.xml/);
+	if (isAndroidManifest != null) {
+		console.log("find AndroidManifest in " + moduleName);
+		configureAndroidManifest(f);
+	};
 });
 
 getConfigureFiles("./android", function (f, s) {
@@ -177,6 +184,7 @@ getConfigureFiles("./android", function (f, s) {
 	if (isProjectGradle != null) {
 		console.log("find build.gradle in android project " + f);
 		configureGradle(f);
+		// configureAppkey(f);
 	}
 });
 // getAllfiles("./",function(f,s){
@@ -227,6 +235,14 @@ function getGradleFile(dir, findOne) {
 
 }
 
+function getAndroidManifest(dir, findOne) {
+	if (typeof findOne !== 'function') {
+		throw new TypeError('The argument "findOne" must be a function');
+	}
+
+	eachFileSync(spath.resolve(dir), findOne);
+}
+
 function getConfigureFiles(dir, findOne) {
 	if (typeof findOne !== 'function') {
 		throw new TypeError('The argument "findOne" must be a function');
@@ -235,21 +251,37 @@ function getConfigureFiles(dir, findOne) {
 	eachFileSync(spath.resolve(dir), findOne);
 }
 
-function configureAppkey(path) {
+function configureAndroidManifest(path) {
 	if (isFile(path) == false) {
 		console.log("configuration JPush error!!");
 		return;
 	}
 
 	var rf = fs.readFileSync(path, "utf-8");
-	var searchAppkey = rf.match(/\n.*JPUSH_APPKEY\: \"yourAppKey\"/);
-	if (searchAppkey != null) {
-		rf = rf.replace(/yourAppKey/, appKey);
-		fs.writeFileSync(path, rf, "utf-8");
-	} else {
-		console.log("Did not find JPUSH_APPKEY in path: " + path);
-	}
+	var isAlreadyWrite = rf.match(/.*android\:value=\"\$\{JPUSH_APPKEY\}\"/);
+	if (isAlreadyWrite == null) {
+		var searchKey = rf.match(/\n.*\<\/activity\>/);
+		if (searchKey != null) {
+			rf = rf.replace(searchKey[0], searchKey[0] + "\n\n\<meta-data android\:name=\"JPUSH_CHANNEL\" android\:value=\"\$\{APP_CHANNEL\}\"\/\>\n\<meta-data android\:name=\"JPUSH_APPKEY\" android\:value=\"\$\{JPUSH_APPKEY\}\"\/\>\n");
+			fs.writeFileSync(path, rf, "utf-8");
+		}
+	};
 }
+
+// function configureAppkey(path) {
+// 	if (isFile(path) == false) {
+// 		console.log("configuration JPush error!!");
+// 		return;
+// 	}
+
+// 	var rf = fs.readFileSync(path, "utf-8");
+// 	var searchAppkey = rf.match(/\n.*JPUSH_APPKEY\:/);
+// 	if (searchAppkey == null) {
+// 		var insertKey = rf.match()
+// 		rf = rf.replace(/yourAppKey/, appKey);
+// 		fs.writeFileSync(path, rf, "utf-8");
+// 	}
+// }
 
 function configureSetting(path) {
 	if (isFile(path) == false) {
